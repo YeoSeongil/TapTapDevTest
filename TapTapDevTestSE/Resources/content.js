@@ -2,6 +2,99 @@ let isTulipMenuClick = false;
 let lastSelectedHighlightType = 'what';
 const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
+function showTulipMenu(span) {
+  if (document.getElementById('memo-box')) return;
+  const existingMenu = document.getElementById('tulip-menu');
+  if (existingMenu) existingMenu.remove();
+  
+  const menu = document.createElement('div');
+  menu.id = 'tulip-menu';
+  menu.addEventListener('click', e => e.stopPropagation());
+  
+  const buttons = [
+    { text: '', type: 'what' },
+    { text: '', type: 'why' },
+    { text: '', type: 'detail' },
+    { text: '', type: 'memo' }
+  ];
+  
+  buttons.forEach(buttonInfo => {
+    const button = document.createElement('button');
+    if (buttonInfo.type === 'memo') {
+      if (isDark) {
+        button.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.328 7.02367L5.54608 13.8056L4.62106 17.2557L4.01261 19.5286C3.99571 19.5921 3.9958 19.6589 4.01286 19.7224C4.02992 19.7859 4.06336 19.8437 4.10982 19.8902C4.15628 19.9366 4.21414 19.9701 4.2776 19.9871C4.34105 20.0042 4.40788 20.0043 4.47138 19.9874L6.74276 19.3782L10.1936 18.4532H10.1944L16.9763 11.6712L12.3288 7.02367H12.328ZM19.7806 7.80949L16.1913 4.21943C16.1218 4.14987 16.0393 4.09469 15.9486 4.05703C15.8578 4.01938 15.7604 4 15.6621 4C15.5639 4 15.4665 4.01938 15.3757 4.05703C15.2849 4.09469 15.2025 4.14987 15.133 4.21943L13.2807 6.07096L17.929 10.7193L19.7806 8.86697C19.8501 8.79753 19.9053 8.71505 19.943 8.62426C19.9806 8.53347 20 8.43614 20 8.33785C20 8.23956 19.9806 8.14224 19.943 8.05145C19.9053 7.96066 19.8501 7.87818 19.7806 7.80874" fill="#B9B9C0"/>
+        </svg>`;
+      } else {
+        button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="#5c5c6e" fill-rule="evenodd" d="m12.328 7.024-6.782 6.782-.925 3.45-.608 2.273a.375.375 0 0 0 .458.458l2.272-.609 3.45-.925h.001l6.782-6.782zm7.453.785-3.59-3.59a.75.75 0 0 0-1.058 0l-1.852 1.852 4.648 4.648 1.852-1.852a.75.75 0 0 0 0-1.058" clip-rule="evenodd"/></svg>`;
+      }
+    } else {
+      button.textContent = buttonInfo.text;
+    }
+    
+    button.dataset.highlightType = buttonInfo.type;
+    
+    if (buttonInfo.type === span.dataset.highlightType) {
+      button.classList.add('selected');
+    }
+
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (buttonInfo.type === 'memo') {
+        const headerHeight = getFixedHeaderHeight();
+        const spanRect = span.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const targetScrollTop = scrollTop + spanRect.top - headerHeight - 10;
+        window.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+        setTimeout(() => showMemoBox(span, null), 300);
+        menu.remove();
+      } else {
+        const newType = buttonInfo.type;
+        span.dataset.highlightType = newType;
+        let comments = JSON.parse(span.dataset.comments || '[]');
+        if (comments.length > 0) {
+          comments.forEach(comment => comment.type = newType);
+          span.dataset.comments = JSON.stringify(comments);
+          renderCapsules(span)
+        }
+        updateDraft(span);
+        
+        menu.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+
+        setTimeout(() => { isTulipMenuClick = false; }, 100);
+        lastSelectedHighlightType = newType;
+      }
+    });
+    menu.appendChild(button);
+  });
+  
+  document.body.appendChild(menu);
+  
+  const spanRect = span.getBoundingClientRect();
+  const menuRect = menu.getBoundingClientRect();
+  const fixedHeaderHeight = getFixedHeaderHeight();
+
+  const spaceAvailableAbove = spanRect.top - fixedHeaderHeight;
+  if (menuRect.height + 10 > spaceAvailableAbove) {
+      const scrollAmount = menuRect.height + 10 - spaceAvailableAbove;
+      // window.scrollBy({ top: -scrollAmount, behavior: 'instant' });
+  }
+
+  const newSpanRect = span.getBoundingClientRect();
+  const newMenuRect = menu.getBoundingClientRect();
+
+  let left = window.scrollX + newSpanRect.left + (newSpanRect.width / 2) - (newMenuRect.width / 2);
+  if (left < window.scrollX) left = window.scrollX + 10;
+  if (left + newMenuRect.width > window.scrollX + window.innerWidth)
+      left = window.scrollX + window.innerWidth - newMenuRect.width - 10;
+
+  let top = window.scrollY + newSpanRect.top - newMenuRect.height - 14;
+
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+}
+
 function getFixedHeaderHeight() {
   let fixedHeaderHeight = 0;
   const elements = document.querySelectorAll('body *');
@@ -163,99 +256,6 @@ function showMemoBox(span, memoId = null) {
   
   span.after(memoBox);
   textarea.focus();
-}
-
-function showTulipMenu(span) {
-  if (document.getElementById('memo-box')) return;
-  const existingMenu = document.getElementById('tulip-menu');
-  if (existingMenu) existingMenu.remove();
-  
-  const menu = document.createElement('div');
-  menu.id = 'tulip-menu';
-  menu.addEventListener('click', e => e.stopPropagation());
-  
-  const buttons = [
-    { text: '', type: 'what' },
-    { text: '', type: 'why' },
-    { text: '', type: 'detail' },
-    { text: '', type: 'memo' }
-  ];
-  
-  buttons.forEach(buttonInfo => {
-    const button = document.createElement('button');
-    if (buttonInfo.type === 'memo') {
-      if (isDark) {
-        button.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.328 7.02367L5.54608 13.8056L4.62106 17.2557L4.01261 19.5286C3.99571 19.5921 3.9958 19.6589 4.01286 19.7224C4.02992 19.7859 4.06336 19.8437 4.10982 19.8902C4.15628 19.9366 4.21414 19.9701 4.2776 19.9871C4.34105 20.0042 4.40788 20.0043 4.47138 19.9874L6.74276 19.3782L10.1936 18.4532H10.1944L16.9763 11.6712L12.3288 7.02367H12.328ZM19.7806 7.80949L16.1913 4.21943C16.1218 4.14987 16.0393 4.09469 15.9486 4.05703C15.8578 4.01938 15.7604 4 15.6621 4C15.5639 4 15.4665 4.01938 15.3757 4.05703C15.2849 4.09469 15.2025 4.14987 15.133 4.21943L13.2807 6.07096L17.929 10.7193L19.7806 8.86697C19.8501 8.79753 19.9053 8.71505 19.943 8.62426C19.9806 8.53347 20 8.43614 20 8.33785C20 8.23956 19.9806 8.14224 19.943 8.05145C19.9053 7.96066 19.8501 7.87818 19.7806 7.80874" fill="#B9B9C0"/>
-        </svg>`;
-      } else {
-        button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="#5c5c6e" fill-rule="evenodd" d="m12.328 7.024-6.782 6.782-.925 3.45-.608 2.273a.375.375 0 0 0 .458.458l2.272-.609 3.45-.925h.001l6.782-6.782zm7.453.785-3.59-3.59a.75.75 0 0 0-1.058 0l-1.852 1.852 4.648 4.648 1.852-1.852a.75.75 0 0 0 0-1.058" clip-rule="evenodd"/></svg>`;
-      }
-    } else {
-      button.textContent = buttonInfo.text;
-    }
-    
-    button.dataset.highlightType = buttonInfo.type;
-    
-    if (buttonInfo.type === span.dataset.highlightType) {
-      button.classList.add('selected');
-    }
-
-    button.addEventListener('click', (event) => {
-      event.stopPropagation();
-      if (buttonInfo.type === 'memo') {
-        const headerHeight = getFixedHeaderHeight();
-        const spanRect = span.getBoundingClientRect();
-        const scrollTop = window.scrollY || document.documentElement.scrollTop;
-        const targetScrollTop = scrollTop + spanRect.top - headerHeight - 10;
-        window.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
-        setTimeout(() => showMemoBox(span, null), 300);
-        menu.remove();
-      } else {
-        const newType = buttonInfo.type;
-        span.dataset.highlightType = newType;
-        let comments = JSON.parse(span.dataset.comments || '[]');
-        if (comments.length > 0) {
-          comments.forEach(comment => comment.type = newType);
-          span.dataset.comments = JSON.stringify(comments);
-          renderCapsules(span)
-        }
-        updateDraft(span);
-        
-        menu.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
-        button.classList.add('selected');
-
-        setTimeout(() => { isTulipMenuClick = false; }, 100);
-        lastSelectedHighlightType = newType;
-      }
-    });
-    menu.appendChild(button);
-  });
-  
-  document.body.appendChild(menu);
-  
-  const spanRect = span.getBoundingClientRect();
-  const menuRect = menu.getBoundingClientRect();
-  const fixedHeaderHeight = getFixedHeaderHeight();
-
-  const spaceAvailableAbove = spanRect.top - fixedHeaderHeight;
-  if (menuRect.height + 10 > spaceAvailableAbove) {
-      const scrollAmount = menuRect.height + 10 - spaceAvailableAbove;
-      // window.scrollBy({ top: -scrollAmount, behavior: 'instant' });
-  }
-
-  const newSpanRect = span.getBoundingClientRect();
-  const newMenuRect = menu.getBoundingClientRect();
-
-  let left = window.scrollX + newSpanRect.left + (newSpanRect.width / 2) - (newMenuRect.width / 2);
-  if (left < window.scrollX) left = window.scrollX + 10;
-  if (left + newMenuRect.width > window.scrollX + window.innerWidth)
-      left = window.scrollX + window.innerWidth - newMenuRect.width - 10;
-
-  let top = window.scrollY + newSpanRect.top - newMenuRect.height - 14;
-
-  menu.style.left = `${left}px`;
-  menu.style.top = `${top}px`;
 }
 
 function isInsideQuotes(text, index) {
@@ -467,6 +467,14 @@ document.addEventListener('dblclick', async function(event) {
     span.appendChild(sentenceRange.extractContents());
     sentenceRange.insertNode(span);
 
+    // 이 부분이 드래그 영역 선택하는 문장
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+
+    const highlightRange = document.createRange();
+    highlightRange.selectNodeContents(span);
+    selection.addRange(highlightRange);
+    
     showTulipMenu(span);
     saveDraft(span);
   } catch (e) {
