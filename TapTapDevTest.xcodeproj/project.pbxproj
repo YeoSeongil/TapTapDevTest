@@ -6,9 +6,48 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9E176A2C2EFE6512000DCDFE /* TapTapDevTestSE.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9E176A142EFE6512000DCDFE /* TapTapDevTestSE.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9E176A2A2EFE6512000DCDFE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9E1769FA2EFE646E000DCDFE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9E176A132EFE6512000DCDFE;
+			remoteInfo = TapTapDevTestSE;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9E176A312EFE6512000DCDFE /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9E176A2C2EFE6512000DCDFE /* TapTapDevTestSE.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		9E176A022EFE646E000DCDFE /* TapTapDevTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TapTapDevTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9E176A142EFE6512000DCDFE /* TapTapDevTestSE.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TapTapDevTestSE.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9E176A2D2EFE6512000DCDFE /* Exceptions for "TapTapDevTestSE" folder in "TapTapDevTestSE" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9E176A132EFE6512000DCDFE /* TapTapDevTestSE */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9E176A042EFE646E000DCDFE /* TapTapDevTest */ = {
@@ -16,10 +55,29 @@
 			path = TapTapDevTest;
 			sourceTree = "<group>";
 		};
+		9E176A152EFE6512000DCDFE /* TapTapDevTestSE */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9E176A2D2EFE6512000DCDFE /* Exceptions for "TapTapDevTestSE" folder in "TapTapDevTestSE" target */,
+			);
+			explicitFolders = (
+				Resources/_locales,
+				Resources/images,
+			);
+			path = TapTapDevTestSE;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		9E1769FF2EFE646E000DCDFE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9E176A112EFE6512000DCDFE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +91,7 @@
 			isa = PBXGroup;
 			children = (
 				9E176A042EFE646E000DCDFE /* TapTapDevTest */,
+				9E176A152EFE6512000DCDFE /* TapTapDevTestSE */,
 				9E176A032EFE646E000DCDFE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				9E176A022EFE646E000DCDFE /* TapTapDevTest.app */,
+				9E176A142EFE6512000DCDFE /* TapTapDevTestSE.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,10 +115,12 @@
 				9E1769FE2EFE646E000DCDFE /* Sources */,
 				9E1769FF2EFE646E000DCDFE /* Frameworks */,
 				9E176A002EFE646E000DCDFE /* Resources */,
+				9E176A312EFE6512000DCDFE /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				9E176A2B2EFE6512000DCDFE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				9E176A042EFE646E000DCDFE /* TapTapDevTest */,
@@ -69,6 +131,28 @@
 			productName = TapTapDevTest;
 			productReference = 9E176A022EFE646E000DCDFE /* TapTapDevTest.app */;
 			productType = "com.apple.product-type.application";
+		};
+		9E176A132EFE6512000DCDFE /* TapTapDevTestSE */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9E176A2E2EFE6512000DCDFE /* Build configuration list for PBXNativeTarget "TapTapDevTestSE" */;
+			buildPhases = (
+				9E176A102EFE6512000DCDFE /* Sources */,
+				9E176A112EFE6512000DCDFE /* Frameworks */,
+				9E176A122EFE6512000DCDFE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				9E176A152EFE6512000DCDFE /* TapTapDevTestSE */,
+			);
+			name = TapTapDevTestSE;
+			packageProductDependencies = (
+			);
+			productName = TapTapDevTestSE;
+			productReference = 9E176A142EFE6512000DCDFE /* TapTapDevTestSE.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +165,9 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					9E176A012EFE646E000DCDFE = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					9E176A132EFE6512000DCDFE = {
 						CreatedOnToolsVersion = 26.2;
 					};
 				};
@@ -100,12 +187,20 @@
 			projectRoot = "";
 			targets = (
 				9E176A012EFE646E000DCDFE /* TapTapDevTest */,
+				9E176A132EFE6512000DCDFE /* TapTapDevTestSE */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		9E176A002EFE646E000DCDFE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9E176A122EFE6512000DCDFE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +217,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9E176A102EFE6512000DCDFE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9E176A2B2EFE6512000DCDFE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9E176A132EFE6512000DCDFE /* TapTapDevTestSE */;
+			targetProxy = 9E176A2A2EFE6512000DCDFE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		9E176A0B2EFE6471000DCDFE /* Debug */ = {
@@ -261,6 +371,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -293,6 +404,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -303,6 +415,72 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9E176A2F2EFE6512000DCDFE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X67DB976UU;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TapTapDevTestSE/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TapTapDevTestSE;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yeo.TapTapDevTest.TapTapDevTestSE;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9E176A302EFE6512000DCDFE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X67DB976UU;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TapTapDevTestSE/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TapTapDevTestSE;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yeo.TapTapDevTest.TapTapDevTestSE;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -327,6 +505,15 @@
 			buildConfigurations = (
 				9E176A0E2EFE6471000DCDFE /* Debug */,
 				9E176A0F2EFE6471000DCDFE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9E176A2E2EFE6512000DCDFE /* Build configuration list for PBXNativeTarget "TapTapDevTestSE" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9E176A2F2EFE6512000DCDFE /* Debug */,
+				9E176A302EFE6512000DCDFE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
