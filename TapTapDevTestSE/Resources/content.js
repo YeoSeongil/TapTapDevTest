@@ -2,13 +2,73 @@ let isTulipMenuClick = false;
 let lastSelectedHighlightType = 'what';
 const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
+// 전역 변수에 추가
+let currentSelection = null;
+let isMonitoringSelection = false;
+
+// selection 변경 감지 함수 추가
+function startMonitoringSelection() {
+  isMonitoringSelection = true;
+  
+  const updateSelection = () => {
+    if (!isMonitoringSelection) return;
+    
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const selectedText = range.toString().trim();
+      
+      if (selectedText.length > 0) {
+        currentSelection = {
+          text: selectedText,
+          range: range.cloneRange()
+        };
+        console.log('=== selection 업데이트됨 ===');
+        console.log('새로 선택된 텍스트:', selectedText);
+        console.log('===========================');
+      }
+    }
+  };
+  
+  // iOS에서는 selectionchange 이벤트 사용
+  document.addEventListener('selectionchange', updateSelection);
+  
+  // 터치 이벤트도 감지
+  document.addEventListener('touchend', updateSelection);
+}
+
+function stopMonitoringSelection() {
+  isMonitoringSelection = false;
+}
+
+// showTulipMenu 함수 수정
+// showTulipMenu 함수 전체
 function showTulipMenu(span) {
   if (document.getElementById('memo-box')) return;
   const existingMenu = document.getElementById('tulip-menu');
   if (existingMenu) existingMenu.remove();
   
+  // *** selection 저장 및 모니터링 시작 ***
+  const selection = window.getSelection();
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    currentSelection = {
+      text: range.toString().trim(),
+      range: range.cloneRange()
+    };
+    console.log('=== showTulipMenu 시점의 selection 저장 ===');
+    console.log('저장된 텍스트:', currentSelection.text);
+    console.log('========================================');
+  } else {
+    currentSelection = null;
+  }
+  
+  // selection 변경 모니터링 시작
+  startMonitoringSelection();
+  
   const menu = document.createElement('div');
   menu.id = 'tulip-menu';
+  menu.dataset.originalSpan = span.dataset.draftId || Date.now();
   menu.addEventListener('click', e => e.stopPropagation());
   
   const buttons = [
@@ -37,9 +97,13 @@ function showTulipMenu(span) {
     if (buttonInfo.type === span.dataset.highlightType) {
       button.classList.add('selected');
     }
-
-    button.addEventListener('click', (event) => {
+    
+    button.addEventListener('click', async (event) => {
       event.stopPropagation();
+      
+      // 모니터링 중지
+      stopMonitoringSelection();
+      
       if (buttonInfo.type === 'memo') {
         const headerHeight = getFixedHeaderHeight();
         const spanRect = span.getBoundingClientRect();
@@ -49,23 +113,291 @@ function showTulipMenu(span) {
         setTimeout(() => showMemoBox(span, null), 300);
         menu.remove();
       } else {
-        const newType = buttonInfo.type;
-        span.dataset.highlightType = newType;
-        let comments = JSON.parse(span.dataset.comments || '[]');
-        if (comments.length > 0) {
-          comments.forEach(comment => comment.type = newType);
-          span.dataset.comments = JSON.stringify(comments);
-          renderCapsules(span)
+        // *** 최종 저장된 selection 사용 ***
+        let newText = span.textContent.trim();
+        let selectionChanged = false;
+        let newRange = null;
+        
+        if (currentSelection && currentSelection.text.length > 0) {
+          newText = currentSelection.text;
+          newRange = currentSelection.range;
+          
+          // 원본과 다른지 확인
+          if (newText !== span.textContent.trim()) {
+            selectionChanged = true;
+          }
         }
-        updateDraft(span);
+        
+        const newType = buttonInfo.type;
+        
+        console.log('=== 하이라이트 수정 정보 ===');
+        console.log('선택된 타입:', newType);
+        console.log('선택된 텍스트:', newText);
+        console.log('텍스트 길이:', newText.length);
+        console.log('드래그로 수정됨:', selectionChanged);
+        console.log('원본 텍스트:', span.textContent.trim());
+        console.log('최종 저장된 selection:', currentSelection);
+        console.log('==========================');
+        
+        // *** 실제 span 수정 로직 수정 ***
+        if (selectionChanged && newRange) {
+          console.log('하이라이트 영역 수정 시작');
+          
+          try {
+            // 1. 기존 span의 draftId와 comments 저장
+            const draftId = span.dataset.draftId;
+            const comments = JSON.parse(span.dataset.comments || '[]');
+            
+            console.log('기존 draftId:', draftId);
+            console.log('기존 comments:', comments);
+            
+            // 2. 기존 capsule container 제거
+            if (span.nextElementSibling && span.nextElementSibling.classList.contains('capsule-container')) {
+              span.nextElementSibling.remove();
+            }
+            
+            // 3. 새로운 span 생성
+            const newSpan = document.createElement('span');
+            newSpan.className = 'highlighted-text';
+            newSpan.dataset.highlightType = newType;
+            newSpan.dataset.draftId = draftId;
+            
+            console.log('새 span에 draftId 설정:', newSpan.dataset.draftId);
+            
+            // comments의 타입도 업데이트
+            if (comments.length > 0) {
+              comments.forEach(comment => comment.type = newType);
+            }
+            newSpan.dataset.comments = JSON.stringify(comments);
+            
+            // 4. range를 복사
+            const clonedRange = newRange.cloneRange();
+            
+            console.log('Range 정보:', {
+              startContainer: clonedRange.startContainer,
+              startOffset: clonedRange.startOffset,
+              endContainer: clonedRange.endContainer,
+              endOffset: clonedRange.endOffset,
+              text: clonedRange.toString()
+            });
+            
+            // 5. 기존 span을 먼저 제거하고 새로운 하이라이트 적용
+            try {
+              // *** range를 저장하기 위해 startNode, endNode, offset 기록 ***
+              const rangeInfo = {
+                startContainer: clonedRange.startContainer,
+                startOffset: clonedRange.startOffset,
+                endContainer: clonedRange.endContainer,
+                endOffset: clonedRange.endOffset,
+                text: clonedRange.toString()
+              };
+              
+              console.log('Range 정보 저장:', rangeInfo);
+              
+              // *** 먼저 기존 span을 제거 ***
+              console.log('기존 span 제거 시작');
+              if (span.parentNode) {
+                const spanParent = span.parentNode;
+                
+                // span의 자식들을 fragment로 추출
+                const fragment = document.createDocumentFragment();
+                while (span.firstChild) {
+                  fragment.appendChild(span.firstChild);
+                }
+                
+                // span을 fragment로 교체
+                spanParent.replaceChild(fragment, span);
+                spanParent.normalize();
+                console.log('기존 span 제거 완료');
+              }
+              
+              // *** 텍스트 검색으로 새로운 하이라이트 적용 ***
+              console.log('새로운 하이라이트 적용 시작 (텍스트 검색)');
+              
+              const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                {
+                  acceptNode: function(node) {
+                    if (node.parentElement && node.parentElement.classList.contains('highlighted-text')) {
+                      return NodeFilter.FILTER_REJECT;
+                    }
+                    return NodeFilter.FILTER_ACCEPT;
+                  }
+                }
+              );
+              
+              let textNode;
+              let found = false;
+              
+              // 전체 텍스트 구성하여 찾기 (여러 노드에 걸쳐있을 수 있음)
+              const textNodes = [];
+              while (textNode = walker.nextNode()) {
+                if (textNode.textContent.trim().length > 0) {
+                  textNodes.push(textNode);
+                }
+              }
+              
+              let fullText = '';
+              const map = [];
+              for (const tn of textNodes) {
+                const start = fullText.length;
+                const end = start + tn.textContent.length;
+                map.push({ node: tn, start, end });
+                fullText += tn.textContent;
+              }
+              
+              // 텍스트 찾기
+              let searchIndex = fullText.indexOf(newText);
+              if (searchIndex === -1) {
+                searchIndex = fullText.indexOf(newText.trim());
+              }
+              
+              if (searchIndex !== -1) {
+                console.log('텍스트 발견, index:', searchIndex);
+                
+                const sentenceStart = searchIndex;
+                const sentenceEnd = searchIndex + newText.length;
+                
+                let startNode = null, startOffset = 0;
+                let endNode = null, endOffset = 0;
+                
+                for (const m of map) {
+                  if (sentenceStart >= m.start && sentenceStart < m.end) {
+                    startNode = m.node;
+                    startOffset = sentenceStart - m.start;
+                  }
+                  if (sentenceEnd >= m.start && sentenceEnd <= m.end) {
+                    endNode = m.node;
+                    endOffset = sentenceEnd - m.start;
+                  }
+                }
+                
+                if (startNode && endNode) {
+                  const newRange = document.createRange();
+                  newRange.setStart(startNode, startOffset);
+                  newRange.setEnd(endNode, endOffset);
+                  
+                  newSpan.appendChild(newRange.extractContents());
+                  newRange.insertNode(newSpan);
+                  
+                  found = true;
+                  console.log('새로운 하이라이트 적용 완료');
+                  console.log('새 span의 textContent:', newSpan.textContent);
+                }
+              }
+              
+              if (!found) {
+                throw new Error('텍스트를 찾을 수 없음');
+              }
+              
+              // 6. capsule 렌더링
+              renderCapsules(newSpan);
+              
+              // 7. draft 업데이트
+              console.log('updateDraft 호출 전 - newSpan.dataset.draftId:', newSpan.dataset.draftId);
+              console.log('updateDraft 호출 전 - newText:', newText);
+              console.log('updateDraft 호출 전 - newSpan.textContent:', newSpan.textContent.trim());
+              console.log('둘이 같은가?', newText === newSpan.textContent.trim());
+
+              await updateDraft(newSpan, newText);
+              
+              // 8. 저장 확인
+              setTimeout(async () => {
+                const data = await browser.storage.local.get('draftHighlights');
+                console.log('=== 저장 후 스토리지 확인 ===');
+                const savedDraft = data.draftHighlights?.find(d => d.id === draftId);
+                console.log('저장된 draft:', savedDraft);
+                console.log('===========================');
+              }, 500);
+              
+              console.log('하이라이트 영역 수정 완료');
+              
+            } catch (rangeError) {
+              console.error('하이라이트 적용 중 오류:', rangeError);
+              
+              // 대체 방법
+              const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                {
+                  acceptNode: function(node) {
+                    if (node.parentElement && node.parentElement.classList.contains('highlighted-text')) {
+                      return NodeFilter.FILTER_REJECT;
+                    }
+                    return NodeFilter.FILTER_ACCEPT;
+                  }
+                }
+              );
+              
+              let textNode;
+              let found = false;
+              while (textNode = walker.nextNode()) {
+                const index = textNode.textContent.indexOf(newText);
+                if (index !== -1) {
+                  const fallbackRange = document.createRange();
+                  fallbackRange.setStart(textNode, index);
+                  fallbackRange.setEnd(textNode, index + newText.length);
+                  
+                  const fallbackSpan = document.createElement('span');
+                  fallbackSpan.className = 'highlighted-text';
+                  fallbackSpan.dataset.highlightType = newType;
+                  fallbackSpan.dataset.draftId = draftId;
+                  fallbackSpan.dataset.comments = JSON.stringify(comments);
+                  
+                  console.log('대체방법 - draftId 설정:', fallbackSpan.dataset.draftId);
+                  
+                  fallbackSpan.appendChild(fallbackRange.extractContents());
+                  fallbackRange.insertNode(fallbackSpan);
+                  
+                  renderCapsules(fallbackSpan);
+                  await updateDraft(fallbackSpan, newText);
+                  
+                  setTimeout(async () => {
+                    const data = await browser.storage.local.get('draftHighlights');
+                    console.log('=== 대체방법 저장 후 스토리지 확인 ===');
+                    const savedDraft = data.draftHighlights?.find(d => d.id === draftId);
+                    console.log('저장된 draft:', savedDraft);
+                    console.log('=====================================');
+                  }, 500);
+                  
+                  found = true;
+                  console.log('하이라이트 영역 수정 완료 (대체 방법)');
+                  break;
+                }
+              }
+              
+              if (!found) {
+                console.error('대체 방법으로도 텍스트를 찾지 못했습니다');
+              }
+            }
+            
+          } catch (e) {
+            console.error('하이라이트 영역 수정 중 오류:', e);
+          }
+        } else {
+          // 선택 영역 변경 없이 타입만 변경
+          span.dataset.highlightType = newType;
+          let comments = JSON.parse(span.dataset.comments || '[]');
+          if (comments.length > 0) {
+            comments.forEach(comment => comment.type = newType);
+            span.dataset.comments = JSON.stringify(comments);
+            renderCapsules(span);
+          }
+          await updateDraft(span);
+        }
         
         menu.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
 
         setTimeout(() => { isTulipMenuClick = false; }, 100);
         lastSelectedHighlightType = newType;
+        
+        // 메뉴 제거
+        menu.remove();
       }
     });
+    
     menu.appendChild(button);
   });
   
@@ -78,7 +410,6 @@ function showTulipMenu(span) {
   const spaceAvailableAbove = spanRect.top - fixedHeaderHeight;
   if (menuRect.height + 10 > spaceAvailableAbove) {
       const scrollAmount = menuRect.height + 10 - spaceAvailableAbove;
-      // window.scrollBy({ top: -scrollAmount, behavior: 'instant' });
   }
 
   const newSpanRect = span.getBoundingClientRect();
@@ -504,91 +835,209 @@ async function saveDraft(highlightSpan) {
     console.error('초안 저장 중 오류 발생:', e);
   }
 }
-
-async function updateDraft(highlightSpan) {
+async function updateDraft(highlightSpan, customText = null) {
   const draftId = highlightSpan.dataset.draftId;
+  
+  console.log('=== updateDraft 함수 시작 ===');
+  console.log('draftId:', draftId);
+  console.log('customText:', customText);
+  console.log('span.textContent:', highlightSpan.textContent.trim());
+  
   if (!draftId) {
     console.log("updateDraft: 초안 ID가 없는 하이라이트입니다. 업데이트를 건너뜁니다.");
     return;
   }
   
   try {
+    console.log('스토리지에서 데이터 가져오는 중...');
     const data = await browser.storage.local.get('draftHighlights');
+    console.log('가져온 전체 drafts:', data.draftHighlights);
+    
     const drafts = data.draftHighlights || [];
     const draftIndex = drafts.findIndex(d => d.id === draftId);
     
+    console.log('찾은 draftIndex:', draftIndex);
+    
     if (draftIndex > -1) {
+      console.log('수정 전 draft:', drafts[draftIndex]);
+      
       drafts[draftIndex].type = highlightSpan.dataset.highlightType;
       drafts[draftIndex].comments = JSON.parse(highlightSpan.dataset.comments || '[]');
       
+      // *** customText가 있으면 그것을 사용, 없으면 span의 textContent 사용 ***
+      if (customText !== null) {
+        drafts[draftIndex].sentence = customText;
+        console.log('customText로 업데이트:', customText);
+      } else {
+        drafts[draftIndex].sentence = highlightSpan.textContent.trim();
+        console.log('span textContent로 업데이트:', highlightSpan.textContent.trim());
+      }
+      
+      console.log('수정 후 draft:', drafts[draftIndex]);
+      console.log('스토리지에 저장 시작...');
+      
       await browser.storage.local.set({ draftHighlights: drafts });
+      
+      console.log('스토리지에 저장 완료!');
       console.log('하이라이트 초안을 수정했습니다:', drafts[draftIndex]);
+      
+      // 즉시 확인
+      const verifyData = await browser.storage.local.get('draftHighlights');
+      console.log('저장 직후 확인:', verifyData.draftHighlights?.find(d => d.id === draftId));
+      
     } else {
       console.warn("updateDraft: 수정할 초안을 찾지 못했습니다:", draftId);
+      console.warn("현재 스토리지의 모든 draft IDs:", drafts.map(d => d.id));
     }
   } catch (e) {
     console.error('초안 수정 중 오류 발생:', e);
-  }
-}
-
-async function deleteDraft(draftId) {
-  if (!draftId) {
-    console.log("deleteDraft: 초안 ID가 없습니다. 삭제를 건너뜜니다.");
-    return;
+    console.error('오류 스택:', e.stack);
   }
   
-  try {
-    const data = await browser.storage.local.get('draftHighlights');
-    let drafts = data.draftHighlights || [];
-    const updatedDrafts = drafts.filter(d => d.id !== draftId);
-    
-    await browser.storage.local.set({ draftHighlights: updatedDrafts });
-    console.log('하이라이트 초안을 삭제했습니다:', draftId);
-  } catch (e) {
-    console.error('초안 삭제 중 오류 발생:', e);
-  }
+  console.log('=== updateDraft 함수 종료 ===');
 }
 
 function findAndApplyHighlights(savedHighlights) {
-  if (!savedHighlights || savedHighlights.length === 0) return;
+  console.log('=== findAndApplyHighlights 시작 ===');
+  console.log('적용할 하이라이트 개수:', savedHighlights?.length);
   
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  let textNode;
-  while (textNode = walker.nextNode()) {
-    for (const saved of savedHighlights) {
-      if (saved.applied) continue;
-      
-      const index = textNode.textContent.indexOf(saved.sentence);
-      if (index !== -1) {
-        const range = document.createRange();
-        range.setStart(textNode, index);
-        range.setEnd(textNode, index + saved.sentence.length);
-        
-        const span = document.createElement('span');
-        span.className = 'highlighted-text';
-        
-        if (saved.isDraft) {
-          span.dataset.draftId = saved.id;
-        } else if (saved.id) {
-          span.dataset.id = saved.id;
-        }
-        
-        const type = saved.type || saved.highlightType;
-        span.dataset.highlightType = type;
-        span.dataset.comments = JSON.stringify(saved.comments || '[]');
-        
-        try {
-          range.surroundContents(span);
-          renderCapsules(span);
-          saved.applied = true;
-          walker.currentNode = document.body;
-          break;
-        } catch (e) {
-          console.error("하이라이트 적용 중 오류 발생:", e);
+  if (!savedHighlights || savedHighlights.length === 0) {
+    console.log('적용할 하이라이트가 없습니다.');
+    return;
+  }
+  
+  // 각 하이라이트를 개별적으로 처리
+  savedHighlights.forEach((saved, idx) => {
+    if (saved.applied) {
+      console.log(`하이라이트 #${idx} 이미 적용됨, 건너뜀`);
+      return;
+    }
+    
+    console.log(`\n--- 하이라이트 #${idx} 처리 시작 ---`);
+    console.log('찾을 텍스트 (전체):', saved.sentence);
+    console.log('텍스트 길이:', saved.sentence.length);
+    
+    // 공백 정규화된 버전 생성
+    const normalizedSentence = saved.sentence.replace(/\s+/g, ' ').trim();
+    
+    // buildUnifiedText 방식으로 전체 텍스트 구성
+    const textNodes = [];
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: function(node) {
+          // 이미 하이라이트된 노드는 제외
+          if (node.parentElement && node.parentElement.classList.contains('highlighted-text')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
         }
       }
+    );
+    
+    let textNode;
+    while (textNode = walker.nextNode()) {
+      if (textNode.textContent.trim().length > 0) {
+        textNodes.push(textNode);
+      }
     }
-  }
+    
+    // 전체 텍스트 구성
+    let fullText = '';
+    const map = [];
+    for (const tn of textNodes) {
+      const start = fullText.length;
+      const end = start + tn.textContent.length;
+      map.push({ node: tn, start, end });
+      fullText += tn.textContent;
+    }
+
+    // 1. 원본 텍스트에서 직접 찾기
+    let searchIndex = fullText.indexOf(saved.sentence);
+
+    // 2. 못 찾으면 trim해서 찾기
+    if (searchIndex === -1) {
+      const trimmedSentence = saved.sentence.trim();
+      searchIndex = fullText.indexOf(trimmedSentence);
+      
+      if (searchIndex !== -1) {
+        console.log('trim 후 발견!');
+      }
+    }
+
+    // 3. 그래도 못 찾으면 정규화 (하지만 이 경우 길이가 달라질 수 있음)
+    if (searchIndex === -1) {
+      console.log('❌ 원본 및 trim된 텍스트에서 찾지 못함');
+      console.log('저장된 텍스트:', saved.sentence.substring(0, 100));
+      console.log('페이지 텍스트 샘플:', fullText.substring(0, 200));
+      return;
+    }
+
+    console.log('✓ 전체 텍스트에서 발견! index:', searchIndex);
+
+    // 시작 위치와 끝 위치의 노드 찾기
+    const sentenceStart = searchIndex;
+    const sentenceEnd = searchIndex + saved.sentence.length; // 원본 길이 사용!
+    
+    let startNode = null, startOffset = 0;
+    let endNode = null, endOffset = 0;
+    
+    for (const m of map) {
+      if (sentenceStart >= m.start && sentenceStart < m.end) {
+        startNode = m.node;
+        startOffset = sentenceStart - m.start;
+      }
+      if (sentenceEnd >= m.start && sentenceEnd <= m.end) {
+        endNode = m.node;
+        endOffset = sentenceEnd - m.start;
+      }
+    }
+    
+    if (!startNode || !endNode) {
+      console.log('❌ 시작/끝 노드를 찾지 못함');
+      return;
+    }
+    
+    console.log('시작 노드 찾음, offset:', startOffset);
+    console.log('끝 노드 찾음, offset:', endOffset);
+    
+    try {
+      const range = document.createRange();
+      range.setStart(startNode, startOffset);
+      range.setEnd(endNode, endOffset);
+      
+      const span = document.createElement('span');
+      span.className = 'highlighted-text';
+      
+      if (saved.isDraft) {
+        span.dataset.draftId = saved.id;
+      } else if (saved.id) {
+        span.dataset.id = saved.id;
+      }
+      
+      const type = saved.type || saved.highlightType;
+      span.dataset.highlightType = type;
+      span.dataset.comments = JSON.stringify(saved.comments || '[]');
+      
+      // 여러 노드에 걸쳐있으면 surroundContents가 실패할 수 있으므로
+      // extractContents + insertNode 방식 사용
+      const contents = range.extractContents();
+      span.appendChild(contents);
+      range.insertNode(span);
+      
+      renderCapsules(span);
+      saved.applied = true;
+      console.log('✅ 하이라이트 적용 성공');
+      
+    } catch (e) {
+      console.error("❌ 하이라이트 적용 중 오류 발생:", e);
+      console.error("오류 내용:", e.message);
+    }
+  });
+  
+  const successCount = savedHighlights.filter(h => h.applied).length;
+  console.log(`\n=== findAndApplyHighlights 완료: ${successCount}/${savedHighlights.length} 성공 ===`);
 }
 
 async function loadHighlights() {
@@ -697,3 +1146,30 @@ function buildUnifiedText(clickedNode) {
 
   return { fullText, map };
 }
+// 콘솔에서 직접 실행
+browser.storage.local.get('draftHighlights').then(data => {
+  const currentPageDrafts = data.draftHighlights.filter(d => d.url === window.location.href);
+  console.log('현재 drafts:', currentPageDrafts);
+  
+  // 직접 하이라이트 적용 시도
+  const saved = currentPageDrafts[0];
+  console.log('찾을 텍스트:', saved.sentence);
+  
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let textNode;
+  let foundCount = 0;
+  
+  while (textNode = walker.nextNode()) {
+    const index = textNode.textContent.indexOf(saved.sentence);
+    if (index !== -1) {
+      foundCount++;
+      console.log(`발견 #${foundCount}:`, {
+        nodeValue: textNode.textContent.substring(0, 100),
+        parent: textNode.parentElement.tagName,
+        parentClass: textNode.parentElement.className
+      });
+    }
+  }
+  
+  console.log('총 발견 횟수:', foundCount);
+});
