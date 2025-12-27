@@ -215,17 +215,17 @@ function showTulipMenu(span) {
               console.log('새로운 하이라이트 적용 시작 (텍스트 검색)');
               
               const walker = document.createTreeWalker(
-                document.body,
-                NodeFilter.SHOW_TEXT,
-                {
-                  acceptNode: function(node) {
-                    if (node.parentElement && node.parentElement.classList.contains('highlighted-text')) {
-                      return NodeFilter.FILTER_REJECT;
-                    }
-                    return NodeFilter.FILTER_ACCEPT;
-                  }
-                }
-              );
+                                                       document.body,
+                                                       NodeFilter.SHOW_TEXT,
+                                                       {
+                                                         acceptNode: function(node) {
+                                                           if (node.parentElement && node.parentElement.classList.contains('highlighted-text')) {
+                                                             return NodeFilter.FILTER_REJECT;
+                                                           }
+                                                           return NodeFilter.FILTER_ACCEPT;
+                                                         }
+                                                       }
+                                                       );
               
               let textNode;
               let found = false;
@@ -299,7 +299,7 @@ function showTulipMenu(span) {
               console.log('updateDraft 호출 전 - newText:', newText);
               console.log('updateDraft 호출 전 - newSpan.textContent:', newSpan.textContent.trim());
               console.log('둘이 같은가?', newText === newSpan.textContent.trim());
-
+              
               await updateDraft(newSpan, newText);
               
               // 8. 저장 확인
@@ -318,17 +318,17 @@ function showTulipMenu(span) {
               
               // 대체 방법
               const walker = document.createTreeWalker(
-                document.body,
-                NodeFilter.SHOW_TEXT,
-                {
-                  acceptNode: function(node) {
-                    if (node.parentElement && node.parentElement.classList.contains('highlighted-text')) {
-                      return NodeFilter.FILTER_REJECT;
-                    }
-                    return NodeFilter.FILTER_ACCEPT;
-                  }
-                }
-              );
+                                                       document.body,
+                                                       NodeFilter.SHOW_TEXT,
+                                                       {
+                                                         acceptNode: function(node) {
+                                                           if (node.parentElement && node.parentElement.classList.contains('highlighted-text')) {
+                                                             return NodeFilter.FILTER_REJECT;
+                                                           }
+                                                           return NodeFilter.FILTER_ACCEPT;
+                                                         }
+                                                       }
+                                                       );
               
               let textNode;
               let found = false;
@@ -389,7 +389,7 @@ function showTulipMenu(span) {
         
         menu.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
-
+        
         setTimeout(() => { isTulipMenuClick = false; }, 100);
         lastSelectedHighlightType = newType;
         
@@ -406,22 +406,22 @@ function showTulipMenu(span) {
   const spanRect = span.getBoundingClientRect();
   const menuRect = menu.getBoundingClientRect();
   const fixedHeaderHeight = getFixedHeaderHeight();
-
+  
   const spaceAvailableAbove = spanRect.top - fixedHeaderHeight;
   if (menuRect.height + 10 > spaceAvailableAbove) {
-      const scrollAmount = menuRect.height + 10 - spaceAvailableAbove;
+    const scrollAmount = menuRect.height + 10 - spaceAvailableAbove;
   }
-
+  
   const newSpanRect = span.getBoundingClientRect();
   const newMenuRect = menu.getBoundingClientRect();
-
+  
   let left = window.scrollX + newSpanRect.left + (newSpanRect.width / 2) - (newMenuRect.width / 2);
   if (left < window.scrollX) left = window.scrollX + 10;
   if (left + newMenuRect.width > window.scrollX + window.innerWidth)
-      left = window.scrollX + window.innerWidth - newMenuRect.width - 10;
-
+    left = window.scrollX + window.innerWidth - newMenuRect.width - 10;
+  
   let top = window.scrollY + newSpanRect.top - newMenuRect.height - 14;
-
+  
   menu.style.left = `${left}px`;
   menu.style.top = `${top}px`;
 }
@@ -486,16 +486,16 @@ function renderCapsules(span) {
         
         const isAlreadyClicked = capsule.classList.contains(`clicked-${comment.type}`);
         const memoBoxOpenForThisCapsule = document.getElementById('memo-box') && Number(document.getElementById('memo-box').dataset.editingId) === comment.id;
-
+        
         document.querySelectorAll('.memo-capsule.clicked-what, .memo-capsule.clicked-why, .memo-capsule.clicked-detail').forEach(c => {
           c.classList.remove('clicked-what', 'clicked-why', 'clicked-detail');
         });
-
+        
         if (isAlreadyClicked && memoBoxOpenForThisCapsule) {
           closeMemoBox();
           return;
         }
-
+        
         capsule.classList.add(`clicked-${comment.type}`);
         showMemoBox(span, comment.id);
       });
@@ -520,50 +520,50 @@ function renderCapsules(span) {
 }
 
 function closeMemoBox() {
-    const memoBox = document.getElementById('memo-box');
-    if (!memoBox) return;
-
-    const span = document.querySelector(`[data-draft-id="${memoBox.dataset.highlightId}"]`);
-    if (!span) return;
-
-    const textarea = memoBox.querySelector('textarea');
-    const commentText = textarea.value.trim();
-    let updatedComments = JSON.parse(span.dataset.comments || '[]');
-    const memoId = Number(memoBox.dataset.editingId);
-
-    if (memoId) {
-        const commentIndex = updatedComments.findIndex(m => m.id === memoId);
-        if (commentIndex > -1) {
-            if (commentText) {
-                updatedComments[commentIndex].text = commentText;
-            } else {
-                updatedComments.splice(commentIndex, 1);
-            }
-        }
-    } else {
-        if (commentText) {
-            const newComment = {
-                id: Date.now(),
-                type: span.dataset.highlightType,
-                text: commentText
-            };
-            updatedComments.push(newComment);
-        }
+  const memoBox = document.getElementById('memo-box');
+  if (!memoBox) return;
+  
+  const span = document.querySelector(`[data-draft-id="${memoBox.dataset.highlightId}"]`);
+  if (!span) return;
+  
+  const textarea = memoBox.querySelector('textarea');
+  const commentText = textarea.value.trim();
+  let updatedComments = JSON.parse(span.dataset.comments || '[]');
+  const memoId = Number(memoBox.dataset.editingId);
+  
+  if (memoId) {
+    const commentIndex = updatedComments.findIndex(m => m.id === memoId);
+    if (commentIndex > -1) {
+      if (commentText) {
+        updatedComments[commentIndex].text = commentText;
+      } else {
+        updatedComments.splice(commentIndex, 1);
+      }
     }
-
-    span.dataset.comments = JSON.stringify(updatedComments);
-    memoBox.remove();
-    renderCapsules(span);
-    updateDraft(span);
-
-    document.querySelectorAll('.memo-capsule.clicked-what, .memo-capsule.clicked-why, .memo-capsule.clicked-detail').forEach(c => {
-        c.classList.remove('clicked-what', 'clicked-why', 'clicked-detail');
-    });
+  } else {
+    if (commentText) {
+      const newComment = {
+        id: Date.now(),
+        type: span.dataset.highlightType,
+        text: commentText
+      };
+      updatedComments.push(newComment);
+    }
+  }
+  
+  span.dataset.comments = JSON.stringify(updatedComments);
+  memoBox.remove();
+  renderCapsules(span);
+  updateDraft(span);
+  
+  document.querySelectorAll('.memo-capsule.clicked-what, .memo-capsule.clicked-why, .memo-capsule.clicked-detail').forEach(c => {
+    c.classList.remove('clicked-what', 'clicked-why', 'clicked-detail');
+  });
 }
 
 function showMemoBox(span, memoId = null) {
   closeMemoBox();
-
+  
   const comments = JSON.parse(span.dataset.comments || '[]');
   const currentComment = memoId ? comments.find(m => m.id === memoId) : null;
   
@@ -582,7 +582,7 @@ function showMemoBox(span, memoId = null) {
   textarea.placeholder = '중요한 내용이나 생각을 입력해보세요';
   textarea.value = existingText;
   memoBox.appendChild(textarea);
-
+  
   textarea.addEventListener('blur', closeMemoBox);
   
   span.after(memoBox);
@@ -603,37 +603,37 @@ function showDeleteConfirmationModal(onConfirm) {
   if (existingModal) {
     existingModal.remove();
   }
-
+  
   const modalContainer = document.createElement('div');
   modalContainer.id = 'delete-confirm-modal';
-
+  
   const modalContent = document.createElement('div');
   modalContent.className = 'modal-content';
   
   modalContent.addEventListener('click', e => e.stopPropagation());
-
+  
   const title = document.createElement('h3');
   title.textContent = '해당 하이라이트를 삭제할까요?';
   
   const message = document.createElement('p');
   message.textContent = '메모도 함께 삭제되며,\n삭제한 하이라이트는 복구할 수 없어요';
   message.style.whiteSpace = 'pre-line';
-
+  
   const separator = document.createElement('div');
   separator.className = 'modal-separator';
-
+  
   const buttonContainer = document.createElement('div');
   buttonContainer.className = 'modal-buttons';
-
+  
   const cancelButton = document.createElement('button');
   cancelButton.textContent = '취소';
   cancelButton.onclick = () => {
     modalContainer.remove();
   };
-
+  
   const verticalSeparator = document.createElement('div');
   verticalSeparator.className = 'vertical-separator';
-
+  
   const confirmButton = document.createElement('button');
   confirmButton.className = 'delete-btn';
   confirmButton.textContent = '삭제';
@@ -641,22 +641,22 @@ function showDeleteConfirmationModal(onConfirm) {
     onConfirm();
     modalContainer.remove();
   };
-
+  
   buttonContainer.appendChild(cancelButton);
   buttonContainer.appendChild(verticalSeparator);
   buttonContainer.appendChild(confirmButton);
-
+  
   modalContent.appendChild(title);
   modalContent.appendChild(message);
   modalContent.appendChild(separator);
   modalContent.appendChild(buttonContainer);
   
   modalContainer.appendChild(modalContent);
-
+  
   modalContainer.addEventListener('click', () => {
     modalContainer.remove();
   });
-
+  
   document.body.appendChild(modalContainer);
 }
 
@@ -666,7 +666,7 @@ document.addEventListener('dblclick', async function(event) {
     event.stopPropagation();
     return;
   }
-
+  
   const existingHighlight = event.target.closest('.highlighted-text');
   if (existingHighlight) {
     event.preventDefault();
@@ -689,9 +689,9 @@ document.addEventListener('dblclick', async function(event) {
     else deleteHighlight();
     return;
   }
-
+  
   if (event.target.closest('#tulip-menu') || event.target.closest('#memo-box') || event.target.closest('#delete-confirm-modal')) return;
-
+  
   const selection = window.getSelection();
   if (!selection.rangeCount) return;
   const range = selection.getRangeAt(0);
@@ -708,10 +708,10 @@ document.addEventListener('dblclick', async function(event) {
     }
     if (textNode.nodeType !== Node.TEXT_NODE) return;
   }
-
+  
   // 전체 텍스트를 만들고 클릭 위치를 fullText 상의 index로 변환
   const { fullText, map } = buildUnifiedText(textNode);
-
+  
   let clickIndex = 0;
   for (const m of map) {
     if (m.node === textNode) {
@@ -719,10 +719,10 @@ document.addEventListener('dblclick', async function(event) {
       break;
     }
   }
-
+  
   const text = fullText;          // 기존 변수 재활용 → 최소 변경
   const clickPosition = clickIndex;
-
+  
   let sentenceStart = 0;
   for (let i = clickPosition - 1; i >= 0; i--) {
     const char = text[i];
@@ -735,7 +735,7 @@ document.addEventListener('dblclick', async function(event) {
       break;
     }
   }
-
+  
   let sentenceEnd = text.length;
   for (let i = clickPosition; i < text.length; i++) {
     const char = text[i];
@@ -745,13 +745,13 @@ document.addEventListener('dblclick', async function(event) {
       if (isInsideQuotes(text, i)) continue;
       const nextChar = text[i + 1];
       if ([])
-      sentenceEnd = i + 1;
+        sentenceEnd = i + 1;
       break;
     }
   }
-
+  
   const sentenceRange = document.createRange();
-
+  
   // 문장 시작 위치 → 어느 node인지 찾기
   for (const m of map) {
     if (sentenceStart >= m.start && sentenceStart <= m.end) {
@@ -759,7 +759,7 @@ document.addEventListener('dblclick', async function(event) {
       break;
     }
   }
-
+  
   // 문장 끝 위치 → 어느 node인지 찾기
   for (const m of map) {
     if (sentenceEnd >= m.start && sentenceEnd <= m.end) {
@@ -767,21 +767,21 @@ document.addEventListener('dblclick', async function(event) {
       break;
     }
   }
-
+  
   let extractedText = sentenceRange.toString();
   const leadingWhitespaceLength = extractedText.length - extractedText.trimStart().length;
   if (leadingWhitespaceLength > 0) {
     const newSentenceStart = sentenceStart + leadingWhitespaceLength;
     for (const m of map) {
-        if (newSentenceStart >= m.start && newSentenceStart <= m.end) {
-            sentenceRange.setStart(m.node, newSentenceStart - m.start);
-            break;
-        }
+      if (newSentenceStart >= m.start && newSentenceStart <= m.end) {
+        sentenceRange.setStart(m.node, newSentenceStart - m.start);
+        break;
+      }
     }
   }
   
   if (sentenceRange.toString().trim().length < 3) return;
-
+  
   const allHighlights = document.querySelectorAll('.highlighted-text');
   for (const highlight of allHighlights) {
     const highlightRange = document.createRange();
@@ -789,19 +789,19 @@ document.addEventListener('dblclick', async function(event) {
     if (sentenceRange.compareBoundaryPoints(Range.END_TO_START, highlightRange) < 0 &&
         sentenceRange.compareBoundaryPoints(Range.START_TO_END, highlightRange) > 0) return;
   }
-
+  
   const span = document.createElement('span');
   span.className = 'highlighted-text';
   span.dataset.highlightType = lastSelectedHighlightType;
-
+  
   try {
     span.appendChild(sentenceRange.extractContents());
     sentenceRange.insertNode(span);
-
+    
     // 이 부분이 드래그 영역 선택하는 문장
     const selection = window.getSelection();
     selection.removeAllRanges();
-
+    
     const highlightRange = document.createRange();
     highlightRange.selectNodeContents(span);
     selection.addRange(highlightRange);
@@ -923,18 +923,18 @@ function findAndApplyHighlights(savedHighlights) {
     // buildUnifiedText 방식으로 전체 텍스트 구성
     const textNodes = [];
     const walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode: function(node) {
-          // 이미 하이라이트된 노드는 제외
-          if (node.parentElement && node.parentElement.classList.contains('highlighted-text')) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          return NodeFilter.FILTER_ACCEPT;
-        }
-      }
-    );
+                                             document.body,
+                                             NodeFilter.SHOW_TEXT,
+                                             {
+                                               acceptNode: function(node) {
+                                                 // 이미 하이라이트된 노드는 제외
+                                                 if (node.parentElement && node.parentElement.classList.contains('highlighted-text')) {
+                                                   return NodeFilter.FILTER_REJECT;
+                                                 }
+                                                 return NodeFilter.FILTER_ACCEPT;
+                                               }
+                                             }
+                                             );
     
     let textNode;
     while (textNode = walker.nextNode()) {
@@ -952,10 +952,10 @@ function findAndApplyHighlights(savedHighlights) {
       map.push({ node: tn, start, end });
       fullText += tn.textContent;
     }
-
+    
     // 1. 원본 텍스트에서 직접 찾기
     let searchIndex = fullText.indexOf(saved.sentence);
-
+    
     // 2. 못 찾으면 trim해서 찾기
     if (searchIndex === -1) {
       const trimmedSentence = saved.sentence.trim();
@@ -965,7 +965,7 @@ function findAndApplyHighlights(savedHighlights) {
         console.log('trim 후 발견!');
       }
     }
-
+    
     // 3. 그래도 못 찾으면 정규화 (하지만 이 경우 길이가 달라질 수 있음)
     if (searchIndex === -1) {
       console.log('❌ 원본 및 trim된 텍스트에서 찾지 못함');
@@ -973,9 +973,9 @@ function findAndApplyHighlights(savedHighlights) {
       console.log('페이지 텍스트 샘플:', fullText.substring(0, 200));
       return;
     }
-
+    
     console.log('✓ 전체 텍스트에서 발견! index:', searchIndex);
-
+    
     // 시작 위치와 끝 위치의 노드 찾기
     const sentenceStart = searchIndex;
     const sentenceEnd = searchIndex + saved.sentence.length; // 원본 길이 사용!
@@ -1057,11 +1057,11 @@ async function loadHighlights() {
     setTimeout(() => {
       document.querySelectorAll('.highlighted-text').forEach(span => {
         if (span.parentNode) {
-            span.replaceWith(...span.childNodes);
+          span.replaceWith(...span.childNodes);
         }
       });
       document.querySelectorAll('.capsule-container, #tulip-menu, #memo-box').forEach(el => el.remove());
-
+      
       findAndApplyHighlights(highlightsToApply);
     }, 1000);
   } catch (e) {
@@ -1095,37 +1095,48 @@ document.addEventListener('visibilitychange', () => {
 });
 
 document.addEventListener('click', function(event) {
-    const tulipMenu = document.getElementById('tulip-menu');
-    const memoBox = document.getElementById('memo-box');
-    const clickedHighlight = event.target.closest('.highlighted-text');
-
-    if (memoBox && !memoBox.contains(event.target) && !event.target.closest('.memo-capsule')) {
-        closeMemoBox();
+  const tulipMenu = document.getElementById('tulip-menu');
+  const memoBox = document.getElementById('memo-box');
+  const clickedHighlight = event.target.closest('.highlighted-text');
+  
+  if (memoBox && !memoBox.contains(event.target) && !event.target.closest('.memo-capsule')) {
+    closeMemoBox();
+  }
+  
+  if (clickedHighlight) {
+    // *** 수정: 클릭한 하이라이트를 selection으로 선택 ***
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    
+    const range = document.createRange();
+    range.selectNodeContents(clickedHighlight);
+    selection.addRange(range);
+    
+    console.log('하이라이트 클릭, selection 생성:', selection.toString());
+    
+    // 툴팁은 기존대로 표시
+    if (tulipMenu && tulipMenu.dataset.highlightId === clickedHighlight.dataset.draftId) {
+      return;
     }
-
-    if (clickedHighlight) {
-        if (tulipMenu && tulipMenu.dataset.highlightId === clickedHighlight.dataset.draftId) {
-            return;
-        }
-        showTulipMenu(clickedHighlight);
-        return;
-    }
-
-    if (tulipMenu) {
-        tulipMenu.remove();
-    }
+    showTulipMenu(clickedHighlight);
+    return;
+  }
+  
+  if (tulipMenu) {
+    tulipMenu.remove();
+  }
 });
 
 function buildUnifiedText(clickedNode) {
   let container = clickedNode;
-
+  
   // 문장 컨테이너 찾기 (최소 수정 → 기존 구조 유지)
   while (container && container !== document.body) {
     if (container.matches?.('span.article_p, p, div')) break;
     container = container.parentNode;
   }
   if (!container) container = document.body;
-
+  
   // 모든 텍스트 노드 모으기
   const textNodes = [];
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
@@ -1133,7 +1144,7 @@ function buildUnifiedText(clickedNode) {
   while (node = walker.nextNode()) {
     if (node.textContent.trim().length > 0) textNodes.push(node);
   }
-
+  
   // 하나의 문자열로 병합 + 매핑 정보 생성
   let fullText = '';
   const map = [];
@@ -1143,7 +1154,7 @@ function buildUnifiedText(clickedNode) {
     map.push({ node: tn, start, end });
     fullText += tn.textContent;
   }
-
+  
   return { fullText, map };
 }
 // 콘솔에서 직접 실행
